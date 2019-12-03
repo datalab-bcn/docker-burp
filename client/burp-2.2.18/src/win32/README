@@ -1,0 +1,23 @@
+How to build the Windows client installers on unix-based systems
+----------------------------------------------------------------
+
+First you need to get a working cross compile area set up.
+See https://github.com/grke/burp-cross-tools
+
+This will install cross compilers for both 32bit and 64bit clients
+and all the burp dependencies, inside a docker image.
+
+You can now start the docker image, copy the burp sources inside, and
+build the burp installers themselves.
+
+Change to the burp source directory.
+
+Standing in src/win32, run the following:
+
+  make            (for 32bit clients)
+  make WIN64=yes  (for 64bit clients)
+
+All being well, the installer file will appear in:
+
+  release32       (for 32bit clients)
+  release64       (for 64bit clients)

@@ -1,0 +1,50 @@
+define clean_obj
+	$(ECHO_CMD)rm -f $(1) $(patsubst %.o,%.d,$(filter-out %.res,$(1)))
+	$(ECHO_CMD)rm -f $(1) $(addsuffix .d.*,$(basename $(1)))
+endef
+
+define clean_exe
+	$(ECHO_CMD)rm -f $(1) $(addsuffix .dbg,$(basename $(1)))
+endef
+
+define checkdir
+	@if [ ! -e $(dir $(1)) ]; then mkdir -p $(dir $(1)); fi
+endef
+
+define makedep
+	@echo "Generating dependencies for $<"
+	$(call checkdir,$@)
+	$(ECHO_CMD)$(CXX) -MM $(CPPFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+endef
+
+define link_conapp
+	@echo "Linkingc $@"
+	$(call checkdir,$@)
+	$(ECHO_CMD)$(CXX) $(CFLAGS) $(LDFLAGS) -static -mconsole $^ $(1) -o $@
+endef
+
+$(OBJDIR)/%.o: %.c
+	@echo "Compiling $(CXX) $<"
+	$(call checkdir, $@)
+	$(ECHO_CMD)$(CXX) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: %.cpp
+	@echo "Compiling $(CXX) $<"
+	$(call checkdir, $@)
+	$(ECHO_CMD)$(CXX) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.d: %.c
+	$(call checkdir, $@)
+	$(makedep)
+
+$(OBJDIR)/%.d: %.cpp
+	$(call checkdir, $@)
+	$(makedep)
+
+ifneq ($(ALL_OBJS),)
+ifneq ($(MAKECMDGOALS),clean)
+include $(patsubst %.o,%.d,$(filter-out %.res,$(ALL_OBJS)))
+endif
+endif

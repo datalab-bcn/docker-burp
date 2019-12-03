@@ -1,0 +1,117 @@
+#  Written by Robert Nelson, June 2006
+#
+#  Absolute paths used in place of relative paths
+#      Kern Sibbald, October 2008
+#   Split Win32 and Win64 objects and binaries. However
+#     the clean is a significant kludge -- hard coded.
+#     The object directories are deleted during make clean,
+#     so don't point them to any source directory.
+#
+
+# Global Configuration
+
+ECHO_CMD = 
+
+# Main source dir
+MAINDIR := @MAINDIR@
+#
+# Build dir -- i.e. normally  src/win32
+BUILDDIR := @BUILDDIR@
+#
+# Dir above the main source directory, where we find depkgs
+TOPDIR := @TOPDIR@
+#
+# where we find depkgs
+DEPKGS := $(BUILDDIR)/../../@DEPKGS@
+
+DOCDIR := $(TOPDIR)/docs
+
+MINGW_BIN := @BINDIR@
+MINGW_INCLUDE := @INCDIR@
+MINGW_DLLDIR := @DLLDIR@
+MINGW_PREFIX := @MINGW_PREFIX@
+
+CC = $(MINGW_BIN)/$(MINGW_PREFIX)g++ $(DEFINES) $(INCLUDES)
+CXX = $(MINGW_BIN)/$(MINGW_PREFIX)g++ $(DEFINES) $(INCLUDES)
+AR := $(MINGW_BIN)/$(MINGW_PREFIX)ar
+RANLIB := $(MINGW_BIN)/$(MINGW_PREFIX)ranlib
+WINDRES := $(MINGW_BIN)/$(MINGW_PREFIX)windres
+DLLTOOL := $(MINGW_BIN)/$(MINGW_PREFIX)dlltool
+OBJCPY := $(MINGW_BIN)/$(MINGW_PREFIX)objcopy
+NSIS_DIR := $(DEPKGS)/nsis
+STAB2CV := $(DEPKGS)/tools/bin/stab2cv
+
+PACKAGE_NAME := $(shell awk '/AC_INIT/{print ;exit}' $(MAINDIR)/configure.ac | cut -d ',' -f 1 | sed -e 's/\[//' -e 's/\]//' -e 's/^AC_INIT.//')
+PACKAGE_VERSION := $(shell awk '/AC_INIT/{print ;exit}' $(MAINDIR)/configure.ac | cut -d ',' -f 2 | sed -e 's/\[//' -e 's/\]//')
+PACKAGE_BUGREPORT := $(shell awk '/AC_INIT/{print ;exit}' $(MAINDIR)/configure.ac | cut -d ',' -f 3 | sed -e 's/\[//' -e 's/\]//')
+PACKAGE_TARNAME := $(shell awk '/AC_INIT/{print ;exit}' $(MAINDIR)/configure.ac | cut -d ',' -f 4 | sed -e 's/\[//' -e 's/\]//')
+PACKAGE_URL := $(shell awk '/AC_INIT/{print ;exit}' $(MAINDIR)/configure.ac | cut -d ',' -f 5 | sed -e 's/\[//' -e 's/\]//' -e 's/.$$//')
+
+WIN64=@WIN64@
+
+ifeq ($(WIN64),yes)
+   CFLAGS := -g -Wall -Werror -mthreads -O3 -fno-strict-aliasing -DHAVE_VSS64
+   LIBS_NETWORK := -lws2_32
+   WIN_VERSION := 64
+   BINDIR := $(BUILDDIR)/release64
+   LIBDIR := $(BUILDDIR)/release64
+   OBJDIR := obj64
+else
+   CFLAGS := -g -Wall -mthreads -O3 -fno-strict-aliasing -m32
+#   LIBS_NETWORK := -lwsock32
+   LIBS_NETWORK := -lws2_32
+   WIN_VERSION := 32
+   BINDIR := $(BUILDDIR)/release32
+   LIBDIR := $(BUILDDIR)/release32
+   OBJDIR := obj32
+endif
+
+OBJDIRS := obj32 obj64
+
+LDFLAGS := -g -Wall -Wl,--disable-auto-import
+
+INCLUDE_DDK := -I$(MINGW_INCLUDE)/ddk
+INCLUDE_BURP := -I$(MAINDIR)/src -I$(BUILDDIR)/compat
+INCLUDE_ZLIB := -I$(DEPKGS)/include
+INCLUDE_VSS := -I$(DEPKGS)/vss
+INCLUDE_OPENSSL := -I$(DEPKGS)/include
+
+LIBS_ZLIB := \
+	$(DEPKGS)/lib/libz.a
+
+LIBS_SSL := \
+	$(DEPKGS)/lib/libssl.dll.a
+
+LIBS_CRYPTO := \
+	$(DEPKGS)/lib/libcrypto.dll.a
+
+LIBS_RSYNC := \
+	$(DEPKGS)/lib/librsync.a
+
+LIBS_PCRE := \
+	$(DEPKGS)/lib/libpcreposix.dll.a
+
+LIBS_YAJL := \
+	$(DEPKGS)/lib/libyajl.dll.a
+
+LIBS_CHECK := \
+	$(DEPKGS)/lib/libcheck.dll.a
+
+LIBS_BURP := \
+	$(LIBDIR)/libcompat.a
+
+HAVES := \
+	-DHAVE_WIN32 \
+	-DHAVE_ZLIB_H \
+	-DHAVE_LIBZ \
+	-DHAVE_OPENSSL \
+	-DHAVE_PCREPOSIX
+
+PACKAGE_DEFINES := \
+	-DPACKAGE_NAME="\"$(PACKAGE_NAME)\"" \
+	-DPACKAGE_VERSION="\"$(PACKAGE_VERSION)\"" \
+	-DPACKAGE_BUGREPORT="\"$(PACKAGE_BUGREPORT)\"" \
+	-DPACKAGE_TARNAME="\"$(PACKAGE_TARNAME)\"" \
+	-DPACKAGE_URL="\"$(PACKAGE_URL)\""
+
+BITS := @BITS@

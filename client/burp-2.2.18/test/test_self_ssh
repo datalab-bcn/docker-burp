@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#
+# Test a burp client on the same machine as the server, but interact with the
+# client over ssh.
+
+myscript=$(basename $0)
+if [ ! -f "$myscript" ] ; then
+	echo "Please run $myscript whilst standing in the same directory" 1>&2
+	exit 1
+fi
+
+path="$PWD"
+build="$path/build"
+target="$path/target"
+
+. build_and_install
+
+# args:
+# 1 - directory where build was installed
+# 2 - location of client burp
+# 3 - location of client conf (for editing)
+# 4 - location of client conf (for giving as option to burp binary)
+# 5 - directory to backup
+# 6 - directory to restore to
+# 7 - address of the server
+# 8 - ssh command (leave unset for self test)
+# 9 - scp command (leave unset for self test)
+# 10 - address of the client (leave unset for self test)
+do_run()
+{
+	./test_main \
+		"$target" \
+		"$target/usr/sbin/burp" \
+		"$target/etc/burp/burp.conf" \
+		"$target/etc/burp/burp.conf" \
+		"$build" \
+		"/tmp/restore" \
+		127.0.0.1 \
+		"ssh" \
+		"scp" \
+		"localhost" || exit 1
+}
+
+PROTOCOL=1 do_run
+PROTOCOL=2 NO_CA_GEN=1 do_run
+
+exit 0

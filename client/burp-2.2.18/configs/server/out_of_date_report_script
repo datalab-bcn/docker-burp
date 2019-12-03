@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+#
+# This script will generate list of outdated clients
+# Create folders /usr/local/share/burp-custom and /var/log/burp-custom
+# chmod +x the sh file
+# Locate this file in  /usr/local/share/burp-custom/burp-custom-reports.sh
+# link to if desired ln -s /usr/local/share/burp-custom/burp-custom-reports.sh /usr/local/bin/bur-custom-reports.sh
+
+outdated=`date -d "1 days ago" +%F`
+sendto=emailto@server.com
+sendfrom=emailsender@from.com
+timestamp=`date +%F-%H-%M`
+logfolder=/var/log/burp-custom/
+
+
+#Variable to use on outdated hosts function
+repoutdfile=$logfolder/burp-outdated.$outdated.$timestamp.log
+#Variable to use for not outdated hosts function
+repokfile=$logfolder/burp-ok.$outdated.$timestamp.log
+
+logsclean(){
+    find $logfolder -name "*.log" -type f -mtime +30 -delete
+}
+
+make_dirs() {
+    if [[ ! -d $1 ]] ; then  mkdir -p $1 ; fi
+}
+
+make_dirs "$logfolder"
+
+report_outdated(){
+    date_backup=`echo $1 | sed -e 's/\s\+/ /g' | cut -d' ' -f6`
+    echo "line is $1"
+    echo "date_backup is $date_backup"
+    if [[ "$date_backup" < "$outdated" ]] ; then
+        echo "$1" >> $repoutdfile
+	else 
+	    echo "$1" >> $repokfile
+    fi
+}
+
+
+reports(){
+    report_outdated "$1"
+}
+
+send_email_report(){
+    cat $1 | mail -s "$2" $sendto -aFrom:$sendfrom
+}
+
+
+# example output line:
+# hosname       idle           last backup: 0000023 2015-04-10 16:04:01
+# read by line report from burp
+burp -a S | grep -i "last backup" | while read -r line; do reports "$line" ; done
+
+echo "finishing and sending email"
+#Send email using function, parse file and then subject inside "subject line"
+send_email_report $repoutdfile "Outdated hosts older than $outdated on $HOSTNAME"
+send_email_report $repokfile "Burp Hosts ok newer than $outdated on $HOSTNAME"
+
+#Clean old logs
+logsclean
