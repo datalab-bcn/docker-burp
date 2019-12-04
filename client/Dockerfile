@@ -52,6 +52,7 @@ RUN apk add --no-cache \
     openssl \
     rsync \
     unzip \
-    zlib
+    zlib \
+    bash
 
 CMD [ "burp", "-a","t" ]
