@@ -10,4 +10,4 @@ Usage:
 docker run -it -v <host-conf-dir>:/etc/burp/ -v <source-dir>:<docker-source> dlbcn/burp-client
 ```
 
-NOTE: <docker-source> is set inside `/etc/burp/burp.conf`
+NOTE: `<docker-source>` is set inside `/etc/burp/burp.conf`
