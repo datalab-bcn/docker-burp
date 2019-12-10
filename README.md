@@ -1,4 +1,4 @@
-# Docker BURP
+# Docker **burp** v.2.2.18
 This repository contains useful images to deploy a BURP Backup system using Docker.
 
 ## burp-client
