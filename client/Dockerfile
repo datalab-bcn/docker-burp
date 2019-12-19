@@ -25,7 +25,11 @@ RUN apk add --no-cache \
     unzip \
     uthash-dev \
     zlib \
-    zlib-dev
+    zlib-dev \
+    acl-dev \
+    acl \
+    attr-dev \
+    attr
 
 COPY burp-2.2.18 /tmp/burp-2.2.18
 
@@ -53,6 +57,8 @@ RUN apk add --no-cache \
     rsync \
     unzip \
     zlib \
+    attr \
+    acl \
     bash
 
 CMD [ "burp", "-a","t" ]
